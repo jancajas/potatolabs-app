@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potato Labs — Text to Speech for Mac</title>
+  <meta name="description" content="Natural text-to-speech for Mac. 8 voices, voice cloning, PDF support. Everything runs on your device — no internet required.">
+  <meta property="og:title" content="Potato Labs — Text to Speech for Mac">
+  <meta property="og:description" content="Natural text-to-speech for Mac. Voice cloning, PDF support, no internet required.">
+  <meta property="og:image" content="assets/app-screenshot-dark.webp">
+  <meta name="theme-color" content="#0b0e17">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0b0e17;
+      --surface:      #111520;
+      --surface-2:    #161b28;
+      --border:       #1d2335;
+      --text:         #e4e8f0;
+      --muted:        #5b6478;
+      --accent:       #3d7eff;
+      --accent-dim:   rgba(61, 126, 255, 0.12);
+      --accent-ring:  rgba(61, 126, 255, 0.25);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Nav ─────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 14, 23, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-brand picture img {
+      width: 78px;
+      height: 78px;
+      border-radius: 16px;
+    }
+
+    .nav-link {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.42rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: opacity 0.15s;
+    }
+
+    .nav-link:hover { opacity: 0.82; }
+
+    /* ── Hero ────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 3.5rem 1.5rem 1.5rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-ring);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.28rem 0.8rem;
+      border-radius: 100px;
+      margin-bottom: 1.6rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5.5vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      max-width: 740px;
+      margin: 0 auto 1.25rem;
+    }
+
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #fff 40%, #8899bb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+    }
+
+    .cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 10px;
+      font-size: 0.93rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+
+    .btn-ghost {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 400;
+      padding: 0;
+    }
+
+    .btn-ghost:hover { color: var(--text); transform: none; opacity: 1; }
+
+    /* ── Voices bar ──────────────────────────── */
+    .voices-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      max-width: 680px;
+      margin: 2rem auto 0;
+    }
+
+    .voices-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 0.25rem;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 0.38rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-m { background: #3d7eff; }
+    .dot-f { background: #c084fc; }
+
+    .chip-add {
+      border-color: var(--accent-ring);
+      color: var(--accent);
+    }
+
+    /* ── Dual screenshots ────────────────────── */
+    .shots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+      padding: 0 1.5rem;
+    }
+
+    .shot-item {
+      position: relative;
+    }
+
+    .shot-glow {
+      position: absolute;
+      inset: -40px -20px;
+      background: radial-gradient(ellipse 70% 50% at 50% 65%, rgba(61, 126, 255, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .shot-item picture img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .shot-label {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+    }
+
+    /* ── Section wrapper ─────────────────────── */
+    .section {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    .eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    h2 {
+      font-size: clamp(1.55rem, 3vw, 2.15rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-sub {
+      font-size: 0.97rem;
+      color: var(--muted);
+      max-width: 440px;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Feature grid ────────────────────────── */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .feat {
+      background: var(--surface);
+      padding: 1.6rem 1.5rem;
+      transition: background 0.2s;
+    }
+
+    .feat:hover { background: var(--surface-2); }
+
+    .feat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-ring);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .feat h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .feat p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Footer ──────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── Responsive ──────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-inner { padding: 0.85rem 1.25rem; }
+      .hero { padding: 2.5rem 1.25rem 1.25rem; }
+      .shots-grid {
+        grid-template-columns: 1fr;
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+      }
+      .section { padding-left: 1.25rem; padding-right: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="#">
+        <picture>
+          <source srcset="assets/icon.webp" type="image/webp">
+          <img src="assets/icon-128.png" alt="Potato Labs" width="78" height="78">
+        </picture>
+        Potato Labs
+      </a>
+      <a class="nav-link" href="https://apps.apple.com/sg/app/potato-labs/id6758903660">Download</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="pill">macOS · Fully on-device</div>
+    <h1><em>Your words,<br>spoken naturally.</em></h1>
+    <p class="hero-sub">
+      High-quality text-to-speech for Mac — clone any voice, read PDFs aloud, no data leaves your device.
+    </p>
+    <div class="cta-group">
+      <a class="btn btn-primary" href="https://apps.apple.com/sg/app/potato-labs/id6758903660">
+        Get on the Mac App Store
+      </a>
+      <a class="btn btn-ghost" href="#features">See features ↓</a>
+    </div>
+
+    <!-- Voices bar -->
+    <div class="voices-bar">
+      <span class="voices-label">8 voices</span>
+      <div class="chip"><span class="dot dot-m"></span> Kai</div>
+      <div class="chip"><span class="dot dot-m"></span> Alex</div>
+      <div class="chip"><span class="dot dot-m"></span> Jordan</div>
+      <div class="chip"><span class="dot dot-m"></span> Nico</div>
+      <div class="chip"><span class="dot dot-f"></span> Riley</div>
+      <div class="chip"><span class="dot dot-f"></span> Nova</div>
+      <div class="chip"><span class="dot dot-f"></span> Lumi</div>
+      <div class="chip"><span class="dot dot-f"></span> Sage</div>
+      <div class="chip chip-add">+ Clone</div>
+    </div>
+  </header>
+
+  <!-- Dual screenshots -->
+  <div class="shots-grid">
+    <div class="shot-item">
+      <div class="shot-glow"></div>
+      <picture>
+        <source srcset="assets/app-screenshot-dark.webp" type="image/webp">
+        <img
+          src="assets/app screenshot-dark.png"
+          alt="Potato Labs dark mode showing PDF import and playback controls"
+          loading="eager"
+        >
+      </picture>
+      <p class="shot-label">Dark mode · PDF import</p>
+    </div>
+    <div class="shot-item">
+      <div class="shot-glow"></div>
+      <picture>
+        <source srcset="assets/app-screenshot-light.webp" type="image/webp">
+        <img
+          src="assets/app screenshot-light.png"
+          alt="Potato Labs light mode showing text input and voice selector"
+          loading="eager"
+        >
+      </picture>
+      <p class="shot-label">Light mode · Text &amp; voice</p>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="eyebrow">Features</div>
+    <h2>Everything you need,<br>nothing you don't.</h2>
+    <p class="section-sub">No account. No cloud. Just great audio.</p>
+    <div class="grid-3">
+      <div class="feat">
+        <div class="feat-icon">🎙️</div>
+        <h3>Voice Cloning</h3>
+        <p>Clone any voice from an MP3, M4A, FLAC, or WAV file — drop it in and the app learns it instantly.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📄</div>
+        <h3>File Import</h3>
+        <p>PDF, EPUB, Markdown, and TXT. Drag in a file or paste directly.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">⚡</div>
+        <h3>Real-time Streaming</h3>
+        <p>Audio starts playing the moment generation begins — no waiting for long passages to finish.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔒</div>
+        <h3>100% On-device</h3>
+        <p>All models run locally on your Mac. No accounts, no telemetry, no network calls — ever.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">💾</div>
+        <h3>Export to WAV</h3>
+        <p>Save any generated audio as a high-quality WAV file to use in any app or workflow.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🌙</div>
+        <h3>Dark &amp; Light Mode</h3>
+        <p>Switch between dark and light themes. Native macOS feel, right at home on your desktop.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Potato Labs &nbsp;·&nbsp; <a href="privacy.html">Privacy Policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms of Use</a></p>
+  </footer>
+
+</body>
+</html>
